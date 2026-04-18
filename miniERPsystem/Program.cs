@@ -1,4 +1,10 @@
+using Microsoft.EntityFrameworkCore;
+using miniERPsystem.Models;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<MiniErpsystemContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 
