@@ -1,0 +1,6 @@
+@miniERPsystem_HostAddress = http://localhost:5075
+
+GET {{miniERPsystem_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
