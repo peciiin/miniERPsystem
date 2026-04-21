@@ -11,6 +11,7 @@ namespace miniERPsystem.Services
         }
 
         public string craftItem(int idItemToCraft, int quantityToCraft) {
+            // only ID of material we need returning
             var recipeItems = _databaseGate.Recipes.Where(x => x.ProductId == idItemToCraft).ToList();
             
             foreach (var recipe in recipeItems) {
