@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using miniERPsystem.Models;
+using miniERPsystem.Services;
 
 namespace miniERPsystem.Controllers
 {
@@ -8,6 +9,7 @@ namespace miniERPsystem.Controllers
     public class StorageController : ControllerBase
     {
         private readonly MiniErpsystemContext _context;
+        
 
         public StorageController(MiniErpsystemContext context)
         {
