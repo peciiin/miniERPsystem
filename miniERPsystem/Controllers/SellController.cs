@@ -5,17 +5,17 @@ namespace miniERPsystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PurchaseController : ControllerBase
+    public class SellController : ControllerBase
     {
-        private readonly PurchaseService _purchaseService;
-        public PurchaseController(PurchaseService purchaseService)
+        private readonly SellService _sellService;
+        public SellController(SellService sellService)
         {
-            _purchaseService = purchaseService;
+            _sellService = sellService;
         }
-        [HttpPost("order")]
+        [HttpPost("sell")]
         public IActionResult Order(int id, decimal quantity)
         {
-            var res = _purchaseService.BuyItem(id, quantity);
+            var res = _sellService.SellItem(id, quantity);
             if (res.isSuccessed == false)
             {
                 return BadRequest(res.message);
