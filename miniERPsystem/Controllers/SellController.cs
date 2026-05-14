@@ -13,9 +13,9 @@ namespace miniERPsystem.Controllers
             _sellService = sellService;
         }
         [HttpPost("sell")]
-        public IActionResult Order(int id, decimal quantity)
+        public IActionResult Order(int id, decimal quantity, decimal pricePerItem, string? note)
         {
-            var res = _sellService.SellItem(id, quantity);
+            var res = _sellService.SellItem(id, quantity, pricePerItem, note ?? "Sell of Items");
             if (res.isSuccessed == false)
             {
                 return BadRequest(res.message);

@@ -17,6 +17,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ProductionService>();
 builder.Services.AddScoped<PurchaseService>();
 builder.Services.AddScoped<SellService>();
+builder.Services.AddScoped<FinanceService>();
 
 var app = builder.Build();
 

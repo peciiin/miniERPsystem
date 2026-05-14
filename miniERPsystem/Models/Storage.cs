@@ -15,6 +15,8 @@ public partial class Storage
 
     public bool? IsFinal { get; set; }
 
+    public virtual ICollection<Finance> Finances { get; set; } = new List<Finance>();
+
     public virtual ICollection<Recipe> RecipeMaterials { get; set; } = new List<Recipe>();
 
     public virtual ICollection<Recipe> RecipeProducts { get; set; } = new List<Recipe>();

@@ -13,9 +13,9 @@ namespace miniERPsystem.Controllers
             _purchaseService = purchaseService;
         }
         [HttpPost("order")]
-        public IActionResult Order(int id, decimal quantity)
+        public IActionResult Order(int id, decimal quantity, decimal pricePerItem, string? note)
         {
-            var res = _purchaseService.BuyItem(id, quantity);
+            var res = _purchaseService.BuyItem(id, quantity, pricePerItem, note ?? "Purchase of material");
             if (res.isSuccessed == false)
             {
                 return BadRequest(res.message);

@@ -5,13 +5,17 @@ namespace miniERPsystem.Services
     public class PurchaseService
     {
         private readonly MiniErpsystemContext _databaseGate;
-        public PurchaseService(MiniErpsystemContext databaseGate)
+        private readonly FinanceService _financeService;
+        public PurchaseService(MiniErpsystemContext databaseGate, FinanceService financeService)
         {
             _databaseGate = databaseGate;
+            _financeService = financeService;
         }
 
-        public BuyCraftResPattern BuyItem(int id, decimal quantity)
+        public BuyCraftResPattern BuyItem(int id, decimal quantity, decimal pricePerItem, string note)
         {
+
+            // Checking and adding quantity
             if (quantity < 0)
             {
                 return new BuyCraftResPattern
@@ -33,11 +37,17 @@ namespace miniERPsystem.Services
                 return new BuyCraftResPattern { isSuccessed = false, message = "This item u must craft, not buy" };
             }
             item.Quantity += quantity;
+
+            // Finance Logging to database
+
+            _financeService.FinanceLogTransaction(id, quantity, pricePerItem, "PURCHASE", note);
+
             _databaseGate.SaveChanges();
+
             return new BuyCraftResPattern
             {
                 isSuccessed = true,
-                message = "Succefully bought " + quantity + " " + item.Units + " of " + item.ItemName + " to storage."
+                message = "Succefully bought " + quantity + " " + item.Units + " of " + item.ItemName + " to storage for total price of: " + quantity * pricePerItem + " CZK."
             };
         }
     }

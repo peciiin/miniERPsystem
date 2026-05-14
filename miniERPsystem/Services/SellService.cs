@@ -5,13 +5,16 @@ namespace miniERPsystem.Services
     public class SellService
     {
         private readonly MiniErpsystemContext _databaseGate;
-        public SellService(MiniErpsystemContext databaseGate)
+        private readonly FinanceService _financeService;
+        public SellService(MiniErpsystemContext databaseGate, FinanceService financeService)
         {
             _databaseGate = databaseGate;
+            _financeService = financeService;
         }
 
-        public BuyCraftResPattern SellItem(int id, decimal quantity)
+        public BuyCraftResPattern SellItem(int id, decimal quantity, decimal pricePerItem, string note)
         {
+            //Sell checking
             if (quantity < 0)
             {
                 return new BuyCraftResPattern()
@@ -40,12 +43,17 @@ namespace miniERPsystem.Services
                 };
             }
             item.Quantity -= quantity;
+
+            // Finance logging
+
+            _financeService.FinanceLogTransaction(id, quantity, pricePerItem, "SALE", note);
+
             _databaseGate.SaveChanges();
 
             return new BuyCraftResPattern
             {
                 isSuccessed = true,
-                message = "Succefully sold " + quantity + " " + item.Units + " of " + item.ItemName + " from storage."
+                message = "Succefully sold " + quantity + " " + item.Units + " of " + item.ItemName + " from storage for total price of: " + pricePerItem * quantity + " CZK."
             };
         }
     }
