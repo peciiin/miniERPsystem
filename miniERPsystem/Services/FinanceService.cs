@@ -28,5 +28,17 @@ namespace miniERPsystem.Services
 
             _database.Finances.Add(log);
         }
+
+        public MostSoldProduct? GetMostSoldProduct()
+        {
+            return _database.Finances.Where(x => x.Type == "SALE").GroupBy(y => y.ItemId).Select(z => new MostSoldProduct
+            {
+                ProductId = z.Key,
+                TotalSold = z.Sum(x => x.Quantity),
+                TotalEarnings = z.Sum(x => x.TotalPrice)
+            }).OrderByDescending(p => p.TotalEarnings).FirstOrDefault();
+
+
+        }
     }
 }

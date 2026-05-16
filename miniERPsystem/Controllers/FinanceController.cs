@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using miniERPsystem.Models;
+using miniERPsystem.Services;
 
 namespace miniERPsystem.Controllers
 {
@@ -8,9 +9,11 @@ namespace miniERPsystem.Controllers
     public class FinanceController : ControllerBase
     {
         private readonly MiniErpsystemContext _db;
-        public FinanceController(MiniErpsystemContext db)
+        private readonly FinanceService _financeService;
+        public FinanceController(MiniErpsystemContext db, FinanceService financeService)
         {
             _db = db;
+            _financeService = financeService;
         }
         [HttpGet("balance")]
         public IActionResult GetFinaceBalance()
@@ -37,6 +40,21 @@ namespace miniERPsystem.Controllers
                 .ToList();
 
             return Ok(history);
+        }
+
+        [HttpGet("mostSoldProduct")]
+        public IActionResult GetMostSoldProduct()
+        {
+            var product = _financeService.GetMostSoldProduct();
+
+            if (product == null)
+            {
+                return Ok(new
+                {
+                    Message = "We have no sales, make a sale and it will display most sold product"
+                });
+            }
+            return Ok(product);
         }
     }
 }
