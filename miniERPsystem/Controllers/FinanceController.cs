@@ -16,17 +16,18 @@ namespace miniERPsystem.Controllers
             _financeService = financeService;
         }
         [HttpGet("balance")]
-        public IActionResult GetFinaceBalance()
+        public IActionResult GetFinanceBalance()
         {
             var totalMoney = _db.Finances.Sum(x => x.TotalPrice);
             var totalProfit = _db.Finances.Where(x => x.TotalPrice > 0).Sum(x => x.TotalPrice);
             var totalSpendings = _db.Finances.Where(x => x.TotalPrice < 0).Sum(x => x.TotalPrice);
+            var positiveSpendings = Math.Abs(totalSpendings);
             var totalTransactions = _db.Finances.Count();
 
             return Ok(new{
                 TotalMoney = totalMoney,
                 TotalProfit = totalProfit,
-                TotalSpendings = totalSpendings,
+                TotalSpendings = positiveSpendings,
                 Currency = "CZK",
                 TotalTransactions = totalTransactions
             });
@@ -42,7 +43,7 @@ namespace miniERPsystem.Controllers
             return Ok(history);
         }
 
-        [HttpGet("mostSoldProduct")]
+        [HttpGet("most-sold-product")]
         public IActionResult GetMostSoldProduct()
         {
             var product = _financeService.GetMostSoldProduct();
