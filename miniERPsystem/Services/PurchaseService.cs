@@ -1,4 +1,6 @@
 ﻿using miniERPsystem.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace miniERPsystem.Services
 {
@@ -12,43 +14,60 @@ namespace miniERPsystem.Services
             _financeService = financeService;
         }
 
-        public BuyCraftResPattern BuyItem(int id, decimal quantity, decimal pricePerItem, string note)
+        public async Task<ResultPattern> BuyItem(int id, decimal quantity, decimal pricePerItem, string note)
         {
 
-            // Checking and adding quantity
+            // Validation before transaction
             if (quantity < 0)
             {
-                return new BuyCraftResPattern
+                return new ResultPattern
                 {
                     isSuccessed = false,
                     message = "Buy more than 0"
                 };
             }
 
-            var item = _databaseGate.Storages.FirstOrDefault(x => x.ItemId == id);
+            var item = await _databaseGate.Storages.FirstOrDefaultAsync(x => x.ItemId == id);
 
             if (item == null)
             {
-                return new BuyCraftResPattern { isSuccessed = false, message = "Item does not exsits in storage" };
+                return new ResultPattern { isSuccessed = false, message = "Item does not exsits in storage" };
             }
 
             if (item.IsFinal == true)
             {
-                return new BuyCraftResPattern { isSuccessed = false, message = "This item u must craft, not buy" };
+                return new ResultPattern { isSuccessed = false, message = "This item u must craft, not buy" };
             }
-            item.Quantity += quantity;
+            
 
-            // Finance Logging to database
-
-            _financeService.FinanceLogTransaction(id, quantity, pricePerItem, "PURCHASE", note);
-
-            _databaseGate.SaveChanges();
-
-            return new BuyCraftResPattern
+            // Transaction
+            using(var transaction = await _databaseGate.Database.BeginTransactionAsync())
             {
-                isSuccessed = true,
-                message = "Succefully bought " + quantity + " " + item.Units + " of " + item.ItemName + " to storage for total price of: " + quantity * pricePerItem + " CZK."
-            };
+                try
+                {
+                    item.Quantity += quantity;
+
+                    await _financeService.FinanceLogTransactionAsync(id, quantity, pricePerItem, "PURCHASE", note);
+                    await _databaseGate.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return new ResultPattern
+                    {
+                        isSuccessed = true,
+                        message = "Succefully bought " + quantity + " " + item.Units + " of " + item.ItemName + " to storage for total price of: " + quantity * pricePerItem + " CZK."
+                    };
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return new ResultPattern
+                    {
+                        isSuccessed = false,
+                        message = "Transaction failed, returning to previous state."
+                    };
+                }
+            }
+            
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using miniERPsystem.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace miniERPsystem.Services
 {
@@ -12,49 +13,76 @@ namespace miniERPsystem.Services
             _financeService = financeService;
         }
 
-        public BuyCraftResPattern SellItem(int id, decimal quantity, decimal pricePerItem, string note)
+        public async Task<ResultPattern> SellItemAsync(int id, decimal quantity, decimal pricePerItem, string note)
         {
-            //Sell checking
+            // Sell Validation
+            if (pricePerItem < 0)
+            {
+                return new ResultPattern()
+                {
+                    isSuccessed = false,
+                    message = "Price cant be lower than 0 when u selling"
+                };
+            }
+            
             if (quantity < 0)
             {
-                return new BuyCraftResPattern()
+                return new ResultPattern()
                 {
                     isSuccessed = false,
                     message = "Quantity must be grater than 0"
                 };
             }
-            var item = _databaseGate.Storages.FirstOrDefault(x => x.ItemId == id);
+            var item = await _databaseGate.Storages.FirstOrDefaultAsync(x => x.ItemId == id);
             if (item == null)
             {
-                return new BuyCraftResPattern { isSuccessed = false, message = "Item does not exsits in storage" };
+                return new ResultPattern { isSuccessed = false, message = "Item does not exsits in storage" };
             }
 
             if (item.IsFinal == false)
             {
-                return new BuyCraftResPattern { isSuccessed = false, message = "This item u cant sell" };
+                return new ResultPattern { isSuccessed = false, message = "This item u cant sell" };
             }
 
             if (item.Quantity < quantity)
             {
-                return new BuyCraftResPattern
+                return new ResultPattern
                 {
                     isSuccessed = false,
                     message = "You want to sell more than u have in storage, maximum quaintity is: " + item.Quantity.ToString()
                 };
             }
-            item.Quantity -= quantity;
+            
 
-            // Finance logging
-
-            _financeService.FinanceLogTransaction(id, quantity, pricePerItem, "SALE", note);
-
-            _databaseGate.SaveChanges();
-
-            return new BuyCraftResPattern
+            // Finance transaction
+            using(var transaction = await _databaseGate.Database.BeginTransactionAsync())
             {
-                isSuccessed = true,
-                message = "Succefully sold " + quantity + " " + item.Units + " of " + item.ItemName + " from storage for total price of: " + pricePerItem * quantity + " CZK."
-            };
+                try
+                {
+                    item.Quantity -= quantity;
+
+                    await _financeService.FinanceLogTransactionAsync(id, quantity, pricePerItem, "SALE", note);
+                    await _databaseGate.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return new ResultPattern
+                    {
+                        isSuccessed = true,
+                        message = "Succefully sold " + quantity + " " + item.Units + " of " + item.ItemName + " from storage for total price of: " + pricePerItem * quantity + " CZK."
+                    };
+                }
+                catch(Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return new ResultPattern
+                    {
+                        isSuccessed = false,
+                        message = "Transaction failed, went to state before selling"
+                    };
+                }
+                
+            }
+            
         }
     }
 }

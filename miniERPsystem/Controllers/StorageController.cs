@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using miniERPsystem.Models;
 using miniERPsystem.Services;
-
+using Microsoft.EntityFrameworkCore;
 namespace miniERPsystem.Controllers
 {
     [Route("api/[controller]")]
@@ -17,9 +17,9 @@ namespace miniERPsystem.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetStorage()
+        public async Task<IActionResult> GetStorage()
         {
-            var items = _context.Storages.ToList();
+            var items = await _context.Storages.ToListAsync();
 
             return Ok(items);
         }

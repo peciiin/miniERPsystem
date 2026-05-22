@@ -1,4 +1,7 @@
 ﻿using miniERPsystem.Models;
+using Microsoft.EntityFrameworkCore;
+
+
 namespace miniERPsystem.Services
 {
     public class ProductionService
@@ -10,20 +13,23 @@ namespace miniERPsystem.Services
             _databaseGate = database;
         }
 
-        public BuyCraftResPattern craftItem(int idItemToCraft, decimal quantityToCraft) {
+        public async Task<ResultPattern> CraftItemAsync(int idItemToCraft, decimal quantityToCraft) {
+
+            // Validation before transaction
             if (quantityToCraft <= 0)
             {
-                return new BuyCraftResPattern
+                return new ResultPattern
                 {
                     isSuccessed = false,
                     message = "Quantity must be more than 0."
                 };
             }
 
-            var productInfo = _databaseGate.Storages.FirstOrDefault(y => y.ItemId == idItemToCraft);
+            var productInfo = await _databaseGate.Storages.FirstOrDefaultAsync(y => y.ItemId == idItemToCraft);
+
             if (productInfo == null || productInfo.IsFinal == false)
             {
-                return new BuyCraftResPattern
+                return new ResultPattern
                 {
                     isSuccessed = false,
                     message = "This item u cant craft. You must buy it. It is raw material"
@@ -31,40 +37,76 @@ namespace miniERPsystem.Services
             }
             
 
-            var recipeItems = _databaseGate.Recipes.Where(x => x.ProductId == idItemToCraft).ToList();
+            var recipeItems = await _databaseGate.Recipes.Where(x => x.ProductId == idItemToCraft).ToListAsync();
 
             if (recipeItems.Count == 0)
             {
-                return new BuyCraftResPattern { isSuccessed = false, message = "No recipe found for this item." };
+                return new ResultPattern { isSuccessed = false, message = "No recipe found for this item." };
             }
 
-            foreach (var recipe in recipeItems) {
-                var inStorage = _databaseGate.Storages.Where(z => z.ItemId == recipe.MaterialId).FirstOrDefault();
+
+            foreach (var recipe in recipeItems)
+            {
+                var inStorage = await _databaseGate.Storages.Where(z => z.ItemId == recipe.MaterialId).FirstOrDefaultAsync();
                 if (inStorage == null)
                 {
-                    return new BuyCraftResPattern { isSuccessed = false, message = "Material not found in storage" };
+                    return new ResultPattern { isSuccessed = false, message = "Material not found in storage" };
                 }
                 decimal totalNeed = (recipe.NeededMaterial ?? 0) * quantityToCraft;
                 if (inStorage.Quantity < totalNeed)
                 {
-                    return new BuyCraftResPattern { isSuccessed = false, message = "Not enough " + inStorage.ItemName + " need more: " + (totalNeed - inStorage.Quantity) };
-                };
-
-                inStorage.Quantity -= totalNeed;
+                    return new ResultPattern { isSuccessed = false, message = "Not enough " + inStorage.ItemName + " need more: " + (totalNeed - inStorage.Quantity) };
+                }
             }
 
-            var finalProduct = _databaseGate.Storages.Where(z => z.ItemId == idItemToCraft).FirstOrDefault();
-            if (finalProduct == null)
+            //Transaction
+
+            using (var transaction = await _databaseGate.Database.BeginTransactionAsync())
             {
-                return new BuyCraftResPattern { isSuccessed = false, message = "Target product not registred in storage" };
+                try
+                {
+                    foreach (var recipe in recipeItems)
+                    {
+                        var inStorage = await _databaseGate.Storages.FirstAsync(z => z.ItemId == recipe.MaterialId);
+                        decimal totalNeed = (recipe.NeededMaterial ?? 0) * quantityToCraft;
+
+                        inStorage.Quantity -= totalNeed;
+                    }
+
+                    var finalProduct = await _databaseGate.Storages.Where(z => z.ItemId == idItemToCraft).FirstOrDefaultAsync();
+                    if (finalProduct == null)
+                    {
+                        return new ResultPattern { isSuccessed = false, message = "Target product not registred in storage" };
+                    }
+
+                    finalProduct.Quantity += quantityToCraft;
+
+                    await _databaseGate.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return new ResultPattern
+                    {
+                        isSuccessed = true,
+                        message = "Succefull, crafted: " + quantityToCraft + " of " + finalProduct.ItemName + " total in storage: " + finalProduct.Quantity
+                    };
+
+
+                }
+                catch(Exception ex)
+                {
+                    await transaction.RollbackAsync();
+
+                    return new ResultPattern
+                    {
+                        isSuccessed = false,
+                        message = "Transaction failed, went to state before."
+                    };
+                }
             }
-            finalProduct.Quantity += quantityToCraft;
-            _databaseGate.SaveChanges();
-            return new BuyCraftResPattern
-            {
-                isSuccessed = true,
-                message = "Succefull, crafted: " + quantityToCraft + " of " + finalProduct.ItemName + " total in storage: " + finalProduct.Quantity
-            };
+
+                
+
+            
             
         }
     }

@@ -1,6 +1,6 @@
 ﻿namespace miniERPsystem.Models
 {
-    public class BuyCraftResPattern
+    public class ResultPattern
     {
         //
         public bool isSuccessed { get; set; }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using miniERPsystem.Services;
-
+using Microsoft.EntityFrameworkCore;
 namespace miniERPsystem.Controllers
 {
     [Route("api/[controller]")]
@@ -13,9 +13,9 @@ namespace miniERPsystem.Controllers
             _sellService = sellService;
         }
         [HttpPost("sell")]
-        public IActionResult Order(int id, decimal quantity, decimal pricePerItem, string? note)
+        public async Task<IActionResult> Sell(int id, decimal quantity, decimal pricePerItem, string? note)
         {
-            var res = _sellService.SellItem(id, quantity, pricePerItem, note ?? "Sell of Items");
+            var res = await _sellService.SellItemAsync(id, quantity, pricePerItem, note ?? "Sell of Items");
             if (res.isSuccessed == false)
             {
                 return BadRequest(res.message);

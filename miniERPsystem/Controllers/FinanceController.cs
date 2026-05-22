@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using miniERPsystem.Models;
 using miniERPsystem.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace miniERPsystem.Controllers
 {
@@ -15,14 +16,14 @@ namespace miniERPsystem.Controllers
             _db = db;
             _financeService = financeService;
         }
-        [HttpGet("balance")]
-        public IActionResult GetFinanceBalance()
+        [HttpGet("balance")] // Gets total return of money, Total profit from sells, Total spendings on material and total transactions made
+        public async Task<IActionResult> GetFinanceBalance()
         {
-            var totalMoney = _db.Finances.Sum(x => x.TotalPrice);
-            var totalProfit = _db.Finances.Where(x => x.TotalPrice > 0).Sum(x => x.TotalPrice);
-            var totalSpendings = _db.Finances.Where(x => x.TotalPrice < 0).Sum(x => x.TotalPrice);
+            var totalMoney = await _db.Finances.SumAsync(x => x.TotalPrice);
+            var totalProfit = await _db.Finances.Where(x => x.TotalPrice > 0).SumAsync(x => x.TotalPrice);
+            var totalSpendings = await _db.Finances.Where(x => x.TotalPrice < 0).SumAsync(x => x.TotalPrice);
             var positiveSpendings = Math.Abs(totalSpendings);
-            var totalTransactions = _db.Finances.Count();
+            var totalTransactions = await _db.Finances.CountAsync();
 
             return Ok(new{
                 TotalMoney = totalMoney,
@@ -33,20 +34,20 @@ namespace miniERPsystem.Controllers
             });
         }
 
-        [HttpGet("history")]
-        public IActionResult GetHistory()
+        [HttpGet("history")] // Gets history of transactions
+        public async Task<IActionResult> GetHistory()
         {
-            var history = _db.Finances
+            var history = await _db.Finances
                 .OrderByDescending(f => f.Created)
-                .ToList();
+                .ToListAsync();
 
             return Ok(history);
         }
 
         [HttpGet("most-sold-product")]
-        public IActionResult GetMostSoldProduct()
+        public async Task<IActionResult> GetMostSoldProduct()
         {
-            var product = _financeService.GetMostSoldProduct();
+            var product = await _financeService.GetMostSoldProductAsync();
 
             if (product == null)
             {
