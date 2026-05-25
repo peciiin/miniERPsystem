@@ -7,10 +7,11 @@ namespace miniERPsystem.Services
     public class ProductionService
     {
         private readonly MiniErpsystemContext _databaseGate;
-
-        public ProductionService(MiniErpsystemContext database)
+        private readonly AutomaticOrderService _automaticOrderService;
+        public ProductionService(MiniErpsystemContext database, AutomaticOrderService automaticOrderService)
         {
             _databaseGate = database;
+            _automaticOrderService = automaticOrderService;
         }
 
         public async Task<ResultPattern> CraftItemAsync(int idItemToCraft, decimal quantityToCraft) {
@@ -84,10 +85,22 @@ namespace miniERPsystem.Services
                     await _databaseGate.SaveChangesAsync();
                     await transaction.CommitAsync();
 
+                    string msg = "";
+                    foreach (var recipe in recipeItems)
+                    {
+                        var checkResult = await _automaticOrderService.CheckStorageItemQuantity(recipe.MaterialId ?? 0);
+                        if (checkResult.IsRequired)
+                        {
+                            string orderLog = await _automaticOrderService.DoAutomaticOrderAsync(recipe.MaterialId ?? 0, checkResult.QuantityToBuy);
+                            msg += " " + orderLog;
+                        }
+                    }
+
+
                     return new ResultPattern
                     {
                         isSuccessed = true,
-                        message = "Succefull, crafted: " + quantityToCraft + " of " + finalProduct.ItemName + " total in storage: " + finalProduct.Quantity
+                        message = "Succefull, crafted: " + quantityToCraft + " of " + finalProduct.ItemName + " total in storage: " + finalProduct.Quantity + msg
                     };
 
 

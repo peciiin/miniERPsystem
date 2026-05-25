@@ -8,7 +8,7 @@ namespace miniERPsystem.Services
     public class AutomaticOrderService
     {
         private readonly MiniErpsystemContext _database;
-        public readonly FinanceService _financeService;
+        private readonly FinanceService _financeService;
         
         public AutomaticOrderService(MiniErpsystemContext database, FinanceService financeService) 
         {
@@ -62,7 +62,7 @@ namespace miniERPsystem.Services
                         quantityToBuy,
                         purchasePrice,
                         "PURCHASE",
-                        "Automatic order: Low stock trigger"
+                        "Automatic order, Low stock"
                     ); 
                     await _database.SaveChangesAsync();
                     await transaction.CommitAsync();
