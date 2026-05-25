@@ -9,11 +9,17 @@ public partial class Storage
 
     public string ItemName { get; set; } = null!;
 
-    public decimal? Quantity { get; set; }
+    public decimal Quantity { get; set; }
 
     public string? Units { get; set; }
 
     public bool? IsFinal { get; set; }
+
+    public decimal MinQuantity { get; set; }
+
+    public decimal OptimalQuantity { get; set; }
+
+    public decimal? PurchasePrice { get; set; }
 
     public virtual ICollection<Finance> Finances { get; set; } = new List<Finance>();
 

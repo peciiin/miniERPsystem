@@ -18,6 +18,7 @@ builder.Services.AddScoped<ProductionService>();
 builder.Services.AddScoped<PurchaseService>();
 builder.Services.AddScoped<SellService>();
 builder.Services.AddScoped<FinanceService>();
+builder.Services.AddScoped<AutomaticOrderService>();
 
 var app = builder.Build();
 

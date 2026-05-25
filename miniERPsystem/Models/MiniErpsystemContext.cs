@@ -23,7 +23,7 @@ public partial class MiniErpsystemContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=miniERPsystem;Trusted_Connection=True;TrustServerCertificate=True;");
+        => optionsBuilder.UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=MiniERPsystem;Trusted_Connection=True;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -80,9 +80,10 @@ public partial class MiniErpsystemContext : DbContext
                 .HasDefaultValue(false)
                 .HasColumnName("isFinal");
             entity.Property(e => e.ItemName).HasMaxLength(150);
-            entity.Property(e => e.Quantity)
-                .HasDefaultValue(0m)
-                .HasColumnType("decimal(16, 2)");
+            entity.Property(e => e.MinQuantity).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.OptimalQuantity).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Quantity).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Units)
                 .HasMaxLength(10)
                 .HasDefaultValue("ks");
