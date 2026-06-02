@@ -16,7 +16,7 @@ namespace miniERPsystem.Services
 
         public async Task<ResultPattern> CraftItemAsync(int idItemToCraft, decimal quantityToCraft) {
 
-            // Validation before transaction
+            // Validation before transactio
             if (quantityToCraft <= 0)
             {
                 return new ResultPattern
