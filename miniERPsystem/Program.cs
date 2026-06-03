@@ -19,7 +19,7 @@ builder.Services.AddScoped<PurchaseService>();
 builder.Services.AddScoped<SellService>();
 builder.Services.AddScoped<FinanceService>();
 builder.Services.AddScoped<AutomaticOrderService>();
-
+builder.Services.AddScoped<ReportService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
